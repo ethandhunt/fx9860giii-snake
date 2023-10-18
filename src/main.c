@@ -2,6 +2,7 @@
 #include <gint/keyboard.h>
 #include <gint/keycodes.h>
 #include <gint/clock.h>
+#include <gint/drivers.h>
 
 #define CELL_SIZE 4
 #define GRID_WIDTH (128 / CELL_SIZE)
@@ -54,6 +55,7 @@ int main(void)
 
 	while (1)
 	{
+		clearevents();
 		if (keydown(KEY_RIGHT))
 		{
 			dir = 0;
@@ -88,7 +90,7 @@ int main(void)
 			y--;
 		}
 
-		if (keydown(KEY_EXIT))
+		if (keydown_any(KEY_EXIT, KEY_ACON))
 		{
 			break;
 		}
