@@ -2,7 +2,6 @@
 #include <gint/keyboard.h>
 #include <gint/keycodes.h>
 #include <gint/clock.h>
-#include <gint/drivers.h>
 
 #define CELL_SIZE 4
 #define GRID_WIDTH (128 / CELL_SIZE)
@@ -17,7 +16,7 @@ struct coord
 
 unsigned char grid[GRID_LENGTH];
 struct coord coords[GRID_LENGTH];
-int coords_index = 1;
+int coords_index = 10;
 
 void draw_VRAM()
 {
@@ -90,7 +89,7 @@ int main(void)
 			y--;
 		}
 
-		if (keydown_any(KEY_EXIT, KEY_ACON))
+		if (keydown(KEY_EXIT))
 		{
 			break;
 		}
