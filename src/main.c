@@ -3,13 +3,15 @@
 #include <gint/keycodes.h>
 #include <gint/clock.h>
 #include <stdlib.h>
+#include <gint/timer.h>
 
 #define CELL_SIZE 4
 #define GRID_WIDTH (128 / CELL_SIZE)
 #define GRID_HEIGHT (64 / CELL_SIZE)
 #define GRID_LENGTH (GRID_WIDTH * GRID_HEIGHT)
 
-#define DELAY_LENGTH 200
+#define KEY_POLL_DELAY 1000  // μs
+#define DELAY_LENGTH 100     // ms
 
 #define COORDS_INDEX_START 0
 
@@ -19,11 +21,23 @@ struct coord
 	unsigned char y;
 };
 
+enum DIR {
+	DIR_RIGHT,
+	DIR_DOWN,
+	DIR_LEFT,
+	DIR_UP
+};
+
 unsigned char grid[GRID_LENGTH];
 struct coord coords[GRID_LENGTH];
 int coords_index = COORDS_INDEX_START;
 
 struct coord apple_coord;
+
+enum DIR dir = DIR_RIGHT;
+enum DIR next_dir = DIR_RIGHT;
+
+int key_poll_count = 0;
 
 void draw()
 {
@@ -43,56 +57,62 @@ void draw()
 	x = apple_coord.x * CELL_SIZE;
 	y = apple_coord.y * CELL_SIZE;
 	drect_border(x, y, x + CELL_SIZE-1, y + CELL_SIZE-1, C_WHITE, 1, C_BLACK);
+	dprint(50, 0, C_BLACK, "%d", key_poll_count);
+}
+
+int input_handler()
+{
+	key_poll_count++;
+	clearevents();
+	if (keydown(KEY_RIGHT) && dir != DIR_LEFT)
+	{
+		next_dir = DIR_RIGHT;
+	}
+	else if (keydown(KEY_DOWN) && dir != DIR_UP)
+	{
+		next_dir = DIR_DOWN;
+	}
+	else if (keydown(KEY_LEFT) && dir != DIR_RIGHT)
+	{
+		next_dir = DIR_LEFT;
+	}
+	else if (keydown(KEY_UP) && dir != DIR_DOWN)
+	{
+		next_dir = DIR_UP;
+	}
+
+	return TIMER_CONTINUE;
 }
 
 int main(void)
 {
-	unsigned char x = GRID_HEIGHT/2;
-	unsigned char y = GRID_WIDTH/2;
+	unsigned char x = GRID_WIDTH/2;
+	unsigned char y = GRID_HEIGHT/2;
 
-	/*
-	0 - >
-	1 - v
-	2 - <
-	3 - ^
-	*/
-	unsigned char dir = 0;
+	apple_coord.x = rand() % GRID_WIDTH;
+	apple_coord.y = rand() % GRID_HEIGHT;
+
+	int timer_id = timer_configure(TIMER_ANY, KEY_POLL_DELAY, GINT_CALL(input_handler));
+	timer_start(timer_id);
 
 	dclear(C_WHITE);
 
 	while (1)
 	{
-		clearevents();
-		if (keydown(KEY_RIGHT) && dir != 2)
-		{
-			dir = 0;
-		}
-		else if (keydown(KEY_DOWN) && dir != 3)
-		{
-			dir = 1;
-		}
-		else if (keydown(KEY_LEFT) && dir != 0)
-		{
-			dir = 2;
-		}
-		else if (keydown(KEY_UP) && dir != 1)
-		{
-			dir = 3;
-		}
-
-		if (dir == 0)
+		dir = next_dir;
+		if (dir == DIR_RIGHT)
 		{
 			x++;
 		}
-		else if (dir == 1)
+		else if (dir == DIR_DOWN)
 		{
 			y++;
 		}
-		else if (dir == 2)
+		else if (dir == DIR_LEFT)
 		{
 			x--;
 		}
-		else if (dir == 3)
+		else if (dir == DIR_UP)
 		{
 			y--;
 		}
@@ -104,6 +124,7 @@ int main(void)
 			apple_coord.y = rand() % GRID_HEIGHT;
 		}
 
+		clearevents();
 		if (keydown(KEY_EXIT))
 		{
 			break;
@@ -113,7 +134,9 @@ int main(void)
 		if (grid[x + y*GRID_WIDTH] ||x >= GRID_WIDTH || y >= GRID_HEIGHT)
 		{
 			dprint(1, 1, C_BLACK, "LOSE");
+			dprint(1, 9, C_BLACK, "SCORE: %d", coords_index);
 			dupdate();
+			sleep_ms(DELAY_LENGTH);
 			getkey();
 
 			x = GRID_WIDTH/2;
