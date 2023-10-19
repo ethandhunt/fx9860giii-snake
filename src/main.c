@@ -37,8 +37,6 @@ struct coord apple_coord;
 enum DIR dir = DIR_RIGHT;
 enum DIR next_dir = DIR_RIGHT;
 
-int key_poll_count = 0;
-
 void draw()
 {
 	int x;
@@ -57,12 +55,10 @@ void draw()
 	x = apple_coord.x * CELL_SIZE;
 	y = apple_coord.y * CELL_SIZE;
 	drect_border(x, y, x + CELL_SIZE-1, y + CELL_SIZE-1, C_WHITE, 1, C_BLACK);
-	dprint(50, 0, C_BLACK, "%d", key_poll_count);
 }
 
 int input_handler()
 {
-	key_poll_count++;
 	clearevents();
 	if (keydown(KEY_RIGHT) && dir != DIR_LEFT)
 	{
